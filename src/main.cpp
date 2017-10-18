@@ -169,12 +169,23 @@ int main() {
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
 
-  // Waypoint map to read from
-  string map_file_ = "../data/highway_map.csv";
+
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
 
+  // Waypoint map to read from
+  string map_file_ = "./data/highway_map.csv";
   ifstream in_map_(map_file_.c_str(), ifstream::in);
+
+  if (in_map_.good() == true)
+      std::cout << "File found" << std::endl;
+  else
+  {
+      std::cout << "File not found" << std::endl;
+      std::cout << "try other path" << std::endl;
+	  map_file_ = "../data/highway_map.csv";
+	  ifstream in_map_(map_file_.c_str(), ifstream::in);
+  }
 
   string line;
   while (getline(in_map_, line)) {
@@ -241,20 +252,20 @@ int main() {
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 
-          	double dist_inc = 0.5;
+          	double dist_inc = 0.5/56*25;
             for(int i = 0; i < 50; i++)
             {
 				double next_s = car_s+((i+1)*dist_inc);
-				double next_d = 6;				
-				vector<double> xy = getXY(next_s,next_d,map_waypoints_s,map_waypoints_x,map_waypoints_y);				
+				double next_d = 6;
+                //std::cout << "next_s : " << next_s << "." << std::endl;
+                //std::cout << "next_d : " << next_d << "." << std::endl;
+
+				vector<double> xy = getXY(next_s,next_d,map_waypoints_s,map_waypoints_x,map_waypoints_y);
+                //std::cout << "xy[0]  : " << xy[0] << "." << std::endl;
+                //std::cout << "xy[1]  : " << xy[1] << "." << std::endl;
 
 				next_x_vals.push_back(xy[0]);
                 next_y_vals.push_back(xy[1]);
-
-                std::cout << "next_s : " << next_s << "." << std::endl;
-                std::cout << "next_d : " << next_d << "." << std::endl;
-                std::cout << "xy[0]  : " << xy[0] << "." << std::endl;
-                std::cout << "xy[1]  : " << xy[1] << "." << std::endl;
 
             }
 
