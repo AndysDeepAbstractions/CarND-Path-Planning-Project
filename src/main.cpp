@@ -179,10 +179,10 @@ int main() {
   ifstream in_map_(map_file_.c_str(), ifstream::in);
 
   if (in_map_.good() == true)
-      std::cout << "File found" << std::endl;
+      std::cout << map_file_ <<" : File found" << std::endl;
   else
   {
-      std::cout << "File not found" << std::endl;
+      std::cout << map_file_ <<" : File not found" << std::endl;
       std::cout << "try other path" << std::endl;
 	  map_file_ = "../data/highway_map.csv";
 	  ifstream in_map_(map_file_.c_str(), ifstream::in);
@@ -252,10 +252,32 @@ int main() {
 
 
           	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+
             double lane = 1;
             double ref_vel = 49.50;
 
           	int prev_size = previous_path_x.size();
+
+          	// Keep distance
+          	if(prev_size>0){
+          		car_s = end_path_s;
+          	}
+          	bool too_close = false;
+          	//find ref_v to use
+          	for (int i=0;i<sensor_fusion.size();i++){
+          		//car is in my lane
+          		float d = sensor_fusion[i][6];
+          		if(d < (2+4*lane+2) && d> (2+4*lane-2)){
+          			double vx = sensor_fusion[i][3];
+          			double vy = sensor_fusion[i][4];
+          			double check_speed = sqrt(vx*vx+vy*vy);
+          			double check_car_s = sensor_fusion[i][5];
+          			check_car_s+= (double)prev_size*.02*check_speed;
+          			if((check_car_s < car_s)&&((check_car_s-car_s) < 30 )){
+          				ref_vel = 29.5;
+          			}
+          		}
+          	}
 
             vector<double> ptsx;
             vector<double> ptsy;
@@ -294,8 +316,6 @@ int main() {
             ptsy.push_back(next_wp0[1]);
             ptsy.push_back(next_wp1[1]);
             ptsy.push_back(next_wp2[1]);
-
-            std::cout << "next_wp0 : " << next_wp0[0] << " " << next_wp0[1] << std::endl;
 
             // shift angle
             for (int i = 0; i < ptsx.size(); i++ )            {
