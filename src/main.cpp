@@ -263,6 +263,8 @@ int main() {
           		car_s = end_path_s;
           	}
           	bool too_close = false;
+			double front_car_speed = 15; 
+
           	//find ref_v to use
           	for (int i=0;i<sensor_fusion.size();i++){
           		//car is in my lane
@@ -273,21 +275,15 @@ int main() {
           			double check_speed = sqrt(vx*vx+vy*vy);
           			double check_car_s = sensor_fusion[i][5];
           			check_car_s+= (double)prev_size*.02*check_speed;
-          			if((check_car_s > car_s)&&((check_car_s-car_s) < 30 )){
+          			if((check_car_s > car_s)&&((check_car_s-car_s) < 40 )){
           				too_close = true;
+          				front_car_speed = check_speed;
+          	            std::cout << "front_car_speed : " << front_car_speed << std::endl;
           			}else{
           				too_close = false;
           			}
           		}
           	}
-
-  			if(too_close){
-  				if(ref_vel>15)
-  					ref_vel -= 0.224;
-  			}else{
-  				if(ref_vel<49.5)
-  					ref_vel += 0.224;
-  			}
 
             vector<double> ptsx;
             vector<double> ptsy;
@@ -347,6 +343,15 @@ int main() {
             double target_dist = sqrt((target_x)*(target_x)+(target_y)*(target_y));
             double x_add_on = 0;
             for(int i = 1; i <= 50 - previous_path_x.size();i++){
+
+      			if(too_close){
+      				if(ref_vel/2.24>=(front_car_speed))
+      					ref_vel -= 0.22;
+      			}else{
+      				if(ref_vel<49.5)
+      					ref_vel += 0.22;
+      			}
+
                 double N = (target_dist/(.02*ref_vel/2.24));
                 double x_point = x_add_on + (target_x)/N;
                 double y_point = s(x_point);
