@@ -185,6 +185,7 @@ int main() {
       std::cout << map_file_ <<" : File not found" << std::endl;
       std::cout << "try other path" << std::endl;
 	  map_file_ = "../data/highway_map.csv";
+      std::cout << "Please move executable to projekt root folder" << std::endl;
 	  ifstream in_map_(map_file_.c_str(), ifstream::in);
   }
 
@@ -210,8 +211,9 @@ int main() {
 
   double lane = 1;
   double ref_vel = 0.20;
+  double wait_lanechange = 0;
 
-  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&ref_vel,&lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&ref_vel,&lane,&wait_lanechange](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -282,6 +284,45 @@ int main() {
           		}
           	}
 
+          	if (wait_lanechange > 0){
+          		wait_lanechange--;
+          	}else{
+				if (too_close){
+					for(int lane_change = -1;lane_change <=1;lane_change +=2){
+						//std::cout << "lane        : " << setw(8) << lane << " " << std::endl;
+						//std::cout << "lane_change : " << setw(8) << lane_change << " " << std::endl;
+						int new_lane = lane_change + lane;
+						//std::cout << "new_lane    : " << setw(8) << new_lane << " " << std::endl;
+
+						if (new_lane >= 0 && new_lane <= 2){
+							for (int i=0;i<sensor_fusion.size();i++){
+								//car is in my lane
+								float d = sensor_fusion[i][6];
+								if(d < (2+4*new_lane+2) && d> (2+4*new_lane-2)){
+									//std::cout << "new_lane : " << setw(8) << new_lane << " " ;
+									//std::cout << "d        : " << setw(8) << d << " " << std::endl;
+
+									double vx = sensor_fusion[i][3];
+									double vy = sensor_fusion[i][4];
+									double check_speed_new_lane = sqrt(vx*vx+vy*vy);
+									double check_car_s_new_lane = sensor_fusion[i][5];
+									check_car_s_new_lane+= (double)prev_size*.02*check_speed_new_lane;
+									if (not((check_speed_new_lane > check_car_s_new_lane)&&((check_speed_new_lane-check_car_s_new_lane) < 60 ))){
+							          	if (wait_lanechange <= 0){
+							          		lane = new_lane;
+											wait_lanechange = 300;
+											front_car_speed = check_speed_new_lane;
+											std::cout << "new_lane : " << setw(8) << new_lane << " " << std::endl;;
+											break;
+							          	}
+									}
+								}
+							}
+						}
+					}
+				}
+          	}
+
             vector<double> ptsx;
             vector<double> ptsy;
             double ref_x = car_x;
@@ -342,7 +383,7 @@ int main() {
             for(int i = 1; i <= 50 - previous_path_x.size();i++){
 
       			if(too_close){
-      				if(ref_vel/2.24>=(front_car_speed-0.1))
+      				if(ref_vel/2.24>=(front_car_speed*0.9))
       					ref_vel -= 0.22;
       			}else{
       				ref_vel += 0.22;
@@ -350,9 +391,11 @@ int main() {
       					ref_vel=49.9;
       			}
 
+    	        /*
     	        std::cout << " front_car_speed : " << setw(8) << front_car_speed << " ";
     	        std::cout << "ref_vel : " << setw(8) << ref_vel << " ";
     	        std::cout << "too_close : " << setw(8) << too_close << std::endl;
+    	        */
 
                 double N = (target_dist/(.02*ref_vel/2.24));
                 double x_point = x_add_on + (target_x)/N;
