@@ -278,9 +278,6 @@ int main() {
           			if((check_car_s > car_s)&&((check_car_s-car_s) < 40 )){
           				too_close = true;
           				front_car_speed = check_speed;
-          	            std::cout << "front_car_speed : " << front_car_speed << std::endl;
-          			}else{
-          				too_close = false;
           			}
           		}
           	}
@@ -345,12 +342,17 @@ int main() {
             for(int i = 1; i <= 50 - previous_path_x.size();i++){
 
       			if(too_close){
-      				if(ref_vel/2.24>=(front_car_speed))
+      				if(ref_vel/2.24>=(front_car_speed-0.1))
       					ref_vel -= 0.22;
       			}else{
-      				if(ref_vel<49.5)
-      					ref_vel += 0.22;
+      				ref_vel += 0.22;
+      				if(ref_vel>49.9)
+      					ref_vel=49.9;
       			}
+
+    	        std::cout << " front_car_speed : " << setw(8) << front_car_speed << " ";
+    	        std::cout << "ref_vel : " << setw(8) << ref_vel << " ";
+    	        std::cout << "too_close : " << setw(8) << too_close << std::endl;
 
                 double N = (target_dist/(.02*ref_vel/2.24));
                 double x_point = x_add_on + (target_x)/N;
