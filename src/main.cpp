@@ -309,7 +309,7 @@ int main() {
 									double check_speed_new_lane = sqrt(vx*vx+vy*vy);
 									double check_car_s_new_lane = sensor_fusion[i][5];
 									check_car_s_new_lane+= (double)prev_size*.02*check_speed_new_lane;
-									if (((check_car_s_new_lane > car_s)&&((check_car_s_new_lane-car_s) < 60 )))
+									if ((((check_car_s_new_lane-car_s) > -10 )&&((check_car_s_new_lane-car_s) < 60 )))
 										change_ok = false;
 									else{
 							          	if (wait_lanechange <= 0 && change_ok){
