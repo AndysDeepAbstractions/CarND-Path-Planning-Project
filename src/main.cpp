@@ -300,7 +300,7 @@ int main() {
 							for (int i=0;i<sensor_fusion.size();i++){
 								//car is in my lane
 								float d = sensor_fusion[i][6];
-								if(d < (2+4*new_lane+2) && d> (2+4*new_lane-2)){
+								if(true){//d < (2+4*new_lane+2) && d> (2+4*new_lane-2)){   // avoid mulit-car simultaneous lane changes
 									//std::cout << "new_lane : " << setw(8) << new_lane << " " ;
 									//std::cout << "d        : " << setw(8) << d << " " << std::endl;
 
@@ -309,8 +309,11 @@ int main() {
 									double check_speed_new_lane = sqrt(vx*vx+vy*vy);
 									double check_car_s_new_lane = sensor_fusion[i][5];
 									check_car_s_new_lane+= (double)prev_size*.02*check_speed_new_lane;
-									if ((((check_car_s_new_lane-car_s) > -10 )&&((check_car_s_new_lane-car_s) < 60 )))
+									if ((((check_car_s_new_lane-car_s) > -40 )&&((check_car_s_new_lane-car_s) < 60 ))){
 										change_ok = false;
+									    break;
+									}
+
 									else{
 							          	if (wait_lanechange <= 0 && change_ok){
 							          		lane = new_lane;
