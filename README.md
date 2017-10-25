@@ -2,7 +2,7 @@
 Self-Driving Car Engineer Nanodegree Program
 
 
-## Reflections /Model Documentation
+## Reflections / Model Documentation
 
 ![Screenshot](/images/screenshot.png)
 
@@ -12,19 +12,21 @@ Screenshot1: The Car stays on lane and keeps distance if it is not save to chang
 
 Screenshot2: The Car changes Lanes if it is save to change Lanes.
 
-![Screenshot](/images/screenshot3.png)
-
-Screenshot3: The Car changes Lanes if it is save to change Lanes.
-
 
 ### The following criteria are met:
 
-The Car drives multiple laps without violating the simulator rules.
-The Car dont accelerate over 50 mph.
-The acceleration and jerk stays under 10m/s^2 / 10m/s^3.
-The Car avoides collisions.
-The car stays on the lane.
-The Car is able to chane lane.
+- The Car drives multiple laps without violating the simulator rules.
+
+- The Car dont accelerate over 50 mph.
+
+- The acceleration and jerk stays under 10m/s^2 / 10m/s^3.
+
+- The Car avoides collisions.
+
+- The car stays on the lane.
+
+- The Car is able to chane lane.
+
 
 
 ### How it works:
@@ -32,6 +34,7 @@ The Car is able to chane lane.
 The Car follows a incrementaly growing spline in frenet cordinates along the desired lane and slows down if the car in front is to slow and also changes lanes in this case if its save to.
 
 Possible Problems: simultanios lane changes of multiple cars. 
+
 Sometimes the simulator gives a accident warning without any accidens.
 
 Please make sure the executble is in the projekt root folder.
