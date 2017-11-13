@@ -209,9 +209,9 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
-  double lane = 1;
+  int lane = 1;
   double ref_vel = 0.20;
-  double wait_lanechange = 0;
+  double wait_lanechange = 100;
 
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&ref_vel,&lane,&wait_lanechange](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
@@ -271,7 +271,7 @@ int main() {
           	for (int i=0;i<sensor_fusion.size();i++){
           		//car is in my lane
           		float d = sensor_fusion[i][6];
-          		if(d < (2+4*lane+2) && d> (2+4*lane-2)){
+          		if(d < (2+4*lane+2.7) && d> (2+4*lane-2.7)){  //in my lane
           			double vx = sensor_fusion[i][3];
           			double vy = sensor_fusion[i][4];
           			double check_speed = sqrt(vx*vx+vy*vy);
@@ -284,50 +284,102 @@ int main() {
           		}
           	}
 
+          	//check free lane
+          	bool free_lane = true;
+          	bool free_lane_r = true;
+          	bool free_lane_l = true;
+          	for (int i=0;i<sensor_fusion.size();i++){
+          		//car is in my lane
+          		float d = sensor_fusion[i][6];
+          		if(true){//d < (2+4*lane+2.5) && d> (2+4*lane-2.5)){  //in my lane
+          			double vx = sensor_fusion[i][3];
+          			double vy = sensor_fusion[i][4];
+          			double check_speed = sqrt(vx*vx+vy*vy);
+          			double check_car_s = sensor_fusion[i][5];
+          			check_car_s+= (double)prev_size*.02*check_speed;
+          			if(((check_car_s-car_s) > -15 )&&((check_car_s-car_s) < 30 )){
+          				free_lane = false;
+                  		if(d > (2+4*lane+1.5))
+              				free_lane_r = false;
+                  		if(d < (2+4*lane-1.5))
+                  			free_lane_l = false; //*/
+          			}
+          		}
+          	}
+
+
+/*			std::cout << "lane : " << setw(3) << lane << " " ;
+			std::cout << "free_lane : " << setw(3) << free_lane << " " ;
+			std::cout << "free_lane_l : " << setw(3) << free_lane_l << " " ;
+			std::cout << "free_lane_r : " << setw(3) << free_lane_r << " " ;
+			std::cout << "wait_lanechange : " << setw(8) << wait_lanechange << " " ;*/
+
           	if (wait_lanechange > 0){
           		wait_lanechange--;
-          	}else{
-				if (too_close){
-					for(int lane_change = -1;lane_change <=1;lane_change +=2){
-						//std::cout << "lane        : " << setw(8) << lane << " " << std::endl;
-						//std::cout << "lane_change : " << setw(8) << lane_change << " " << std::endl;
-						int new_lane = lane_change + lane;
-						//std::cout << "new_lane    : " << setw(8) << new_lane << " " << std::endl;
-
-						bool change_ok = true;
-
-						if (new_lane >= 0 && new_lane <= 2){
-							for (int i=0;i<sensor_fusion.size();i++){
-								//car is in my lane
-								float d = sensor_fusion[i][6];
-								if(true){//d < (2+4*new_lane+2) && d> (2+4*new_lane-2)){   // avoid mulit-car simultaneous lane changes
-									//std::cout << "new_lane : " << setw(8) << new_lane << " " ;
-									//std::cout << "d        : " << setw(8) << d << " " << std::endl;
-
-									double vx = sensor_fusion[i][3];
-									double vy = sensor_fusion[i][4];
-									double check_speed_new_lane = sqrt(vx*vx+vy*vy);
-									double check_car_s_new_lane = sensor_fusion[i][5];
-									check_car_s_new_lane+= (double)prev_size*.02*check_speed_new_lane;
-									if ((((check_car_s_new_lane-car_s) > -40 )&&((check_car_s_new_lane-car_s) < 60 ))){
-										change_ok = false;
-									    break;
-									}
-
-									else{
-							          	if (wait_lanechange <= 0 && change_ok){
-							          		lane = new_lane;
-											wait_lanechange = 300;
-											front_car_speed = check_speed_new_lane;
-											std::cout << "new_lane : " << setw(8) << new_lane << " " << std::endl;;
-							          	}
-									}
-								}
-							}
-						}
-					}
-				}
+          	}else if (true){
+          		int old_lane = lane;
+          		if       (free_lane_l && not free_lane_r){
+          			lane = max(lane-1,0);
+          		}else if (free_lane_r && not free_lane_l){
+          			lane = min(lane+1,2);
+          		}else if (free_lane == true){
+          			if(lane == 1)
+                  		lane = (rand() % 2) *2;
+          			else
+          				lane = 1;
+          		}
+          		if (old_lane != lane){
+              		wait_lanechange = 70;
+    				std::cout << "new lane : " << setw(3) << lane << " " ;
+    	            std::cout << std::endl;
+          		}
           	}
+
+
+//          	if (wait_lanechange > 0){
+//          		wait_lanechange--;
+//          	}else{
+//				if (too_close&&free_lane){
+//					for(int lane_change = -1;lane_change <=1;lane_change +=2){
+//						//std::cout << "lane        : " << setw(8) << lane << " " << std::endl;
+//						//std::cout << "lane_change : " << setw(8) << lane_change << " " << std::endl;
+//						int new_lane = lane_change + lane;
+//						//std::cout << "new_lane    : " << setw(8) << new_lane << " " << std::endl;
+//
+//						bool change_ok = true;
+//
+//						if (new_lane >= 0 && new_lane <= 2){
+//							for (int i=0;i<sensor_fusion.size();i++){
+//								//car is in my lane
+//								float d = sensor_fusion[i][6];
+//								if(true){//d < (2+4*new_lane+2) && d> (2+4*new_lane-2)){   // avoid mulit-car simultaneous lane changes
+//									//std::cout << "new_lane : " << setw(8) << new_lane << " " ;
+//									//std::cout << "d        : " << setw(8) << d << " " << std::endl;
+//
+//									double vx = sensor_fusion[i][3];
+//									double vy = sensor_fusion[i][4];
+//									double check_speed_new_lane = sqrt(vx*vx+vy*vy);
+//									double check_car_s_new_lane = sensor_fusion[i][5];
+//									check_car_s_new_lane+= (double)prev_size*.02*check_speed_new_lane;
+//									if ((((check_car_s_new_lane-car_s) > -40 )&&((check_car_s_new_lane-car_s) < 60 ))){
+//										change_ok = false;
+//									    break;
+//									}
+//
+//									else{
+//							          	if (wait_lanechange <= 0 && change_ok){
+//							          		lane = new_lane;
+//											wait_lanechange = 300;
+//											front_car_speed = check_speed_new_lane;
+//											std::cout << "new_lane : " << setw(8) << new_lane << " " << std::endl;;
+//							          	}
+//									}
+//								}
+//							}
+//						}
+//					}
+//				}
+//          	}
 
             vector<double> ptsx;
             vector<double> ptsy;
@@ -390,11 +442,11 @@ int main() {
 
       			if(too_close){
       				if(ref_vel/2.24>=(front_car_speed*0.9))
-      					ref_vel -= 0.22;
+      					ref_vel -= 0.2;
       			}else{
-      				ref_vel += 0.22;
-      				if(ref_vel>49.9)
-      					ref_vel=49.9;
+      				ref_vel += 0.2;
+      				if(ref_vel>49.75)
+      					ref_vel=49.75;
       			}
 
     	        /*
